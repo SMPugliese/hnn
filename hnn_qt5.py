@@ -1038,7 +1038,9 @@ class RunParamDialog (DictDialog):
                                   ('f_max_spec', 40),
                                   ('dipole_scalefctr',30e3),
                                   ('dipole_smooth_win',15.0),
-                                  ('save_vsoma',0)])
+                                  ('save_vsoma',0),
+                                  ('save_cai',0),
+                                  ('save_ica',0)])
 
     self.drand = OrderedDict([('prng_seedcore_input_prox', 0),
                               ('prng_seedcore_input_dist', 0),
@@ -1063,7 +1065,9 @@ class RunParamDialog (DictDialog):
     self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
-    self.addtransvar('save_vsoma','Save Somatic Voltages')
+    self.addtransvar('save_vsoma','Save Voltages')
+    self.addtransvar('save_cai','Save Calcium Concentration')
+    self.addtransvar('save_ica','Save Calcium Current')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
     self.addtransvar('prng_seedcore_input_dist','Ongoing Distal Input')
     self.addtransvar('prng_seedcore_extpois','External Poisson')
