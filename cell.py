@@ -45,9 +45,48 @@ class Cell ():
       self.ncfrom_extpois = []
       self.ncfrom_ev = []
 
-    def record_volt_soma (self):
-      self.vsoma = h.Vector()
-      self.vsoma.record(self.soma(0.5)._ref_v)
+    def record_vsoma(self):
+        self.vsoma = h.Vector()
+        self.vsoma.record(self.soma(0.5)._ref_v)
+
+    def record_volt (self):
+        self.v_tuft = h.Vector()
+        self.v_apical2 = h.Vector()
+        self.v_apical1 = h.Vector()
+        self.v_soma = h.Vector()
+        self.v_basal = h.Vector()
+      
+        self.v_tuft.record(self.dends['apical_tuft'](0.5)._ref_v)
+        self.v_apical2.record(self.dends['apical_2'](0.5)._ref_v)
+        self.v_apical1.record(self.dends['apical_1'](0.5)._ref_v)
+        self.v_soma.record(self.soma(0.5)._ref_v)
+        self.v_basal.record(self.dends['basal_2'](0.5)._ref_v)
+
+    def record_cai (self):
+        self.cai_tuft = h.Vector()
+        self.cai_apical2 = h.Vector()
+        self.cai_apical1 = h.Vector()
+        self.cai_soma = h.Vector()
+        self.cai_basal = h.Vector()
+        
+        self.cai_tuft.record(self.dends['apical_tuft'](0.5)._ref_cai)
+        self.cai_apical2.record(self.dends['apical_2'](0.5)._ref_cai)
+        self.cai_apical1.record(self.dends['apical_1'](0.5)._ref_cai)
+        self.cai_soma.record(self.soma(0.5)._ref_cai)
+        self.cai_basal.record(self.dends['basal_2'](0.5)._ref_cai)
+
+    def record_ica (self):
+        self.ica_tuft = h.Vector()
+        self.ica_apical2 = h.Vector()
+        self.ica_apical1 = h.Vector()
+        self.ica_soma = h.Vector()
+        self.ica_basal = h.Vector()
+
+        self.ica_tuft.record(self.dends['apical_tuft'](0.5)._ref_ica)
+        self.ica_apical2.record(self.dends['apical_2'](0.5)._ref_ica)
+        self.ica_apical1.record(self.dends['apical_1'](0.5)._ref_ica)
+        self.ica_soma.record(self.soma(0.5)._ref_ica)
+        self.ica_basal.record(self.dends['basal_2'](0.5)._ref_ica)
 
     def get_sections (self): return [self.soma]
 
@@ -61,20 +100,6 @@ class Cell ():
           lz.append(s.z3d(i))
           ldiam.append(s.diam3d(i))
       return lx,ly,lz,ldiam
-
-    # get cell's bounding box
-    def getbbox (self):
-      lx,ly,lz,ldiam = self.get3dinfo()
-      minx,miny,minz = 1e9,1e9,1e9
-      maxx,maxy,maxz = -1e9,-1e9,-1e9
-      for x,y,z in zip(lx,ly,lz):
-        minx = min(x,minx)
-        miny = min(y,miny)
-        minz = min(z,minz)
-        maxx = max(x,maxx)
-        maxy = max(y,maxy)
-        maxz = max(z,maxz)
-      return ((minx,maxx), (miny,maxy), (minz,maxz))
 
     def translate3d (self, dx, dy, dz):
       #s = self.soma
@@ -159,6 +184,7 @@ class Cell ():
 
     # Add IClamp to a segment
     def insert_IClamp (self, sect_name, props_IClamp):
+      # print(h.SectionList())
       # def insert_iclamp(self, sect_name, seg_loc, tstart, tstop, weight):
       # gather list of all sections
       seclist = h.SectionList()
@@ -166,6 +192,8 @@ class Cell ():
       # find specified sect in section list, insert IClamp, set props
       for sect in seclist:
         if sect_name in sect.name():
+          print(self.celltype)
+          print(sect_name)
           stim = h.IClamp(sect(props_IClamp['loc']))
           stim.delay = props_IClamp['delay']
           stim.dur = props_IClamp['dur']
@@ -241,9 +269,9 @@ class Cell ():
 
     # connect_to_target created for pc, used in Network()
     # these are SOURCES of spikes
-    def connect_to_target (self, target, threshold):
+    def connect_to_target (self, target):
       nc = h.NetCon(self.soma(0.5)._ref_v, target, sec=self.soma)
-      nc.threshold = threshold
+      nc.threshold = 0
       return nc
 
     # parallel receptor-centric connect FROM presyn TO this cell, based on GID
@@ -253,14 +281,10 @@ class Cell ():
       # calculate distance between cell positions with pardistance()
       d = self.__pardistance(nc_dict['pos_src'])
       # set props here
-      nc.threshold = nc_dict['threshold']
+      nc.threshold = 0
       nc.weight[0] = nc_dict['A_weight'] * np.exp(-(d**2) / (nc_dict['lamtha']**2))
       nc.delay = nc_dict['A_delay'] / (np.exp(-(d**2) / (nc_dict['lamtha']**2)))
       # print("parconnect_from_src in cell.py, weight = ",nc.weight[0])
-      #fp = open('delays.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_delay'])+' ' +str(nc.delay)+'\n'); fp.close()
-      #fp = open('weights.txt','a'); fp.write(str(d)+' '+str(nc_dict['A_weight'])+' ' +str(nc.weight[0])+'\n'); fp.close()
-      #fp = open('prepostty.txt','a'); fp.write(nc_dict['type_src']+' '+self.celltype+'\n'); fp.close()
-      
       return nc
 
     # pardistance function requires pre position, since it is calculated on POST cell
