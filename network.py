@@ -388,7 +388,6 @@ class NetworkOnNode ():
             if cell.celltype == 'L5_pyramidal':
                 dica[cell.gid] = (cell.celltype, np.array(cell.ica_tuft.to_python()), np.array(cell.ica_apical2.to_python()), \
                                  np.array(cell.ica_apical1.to_python()), np.array(cell.ica_soma.to_python()), np.array(cell.ica_basal.to_python()))
-        print(dica)
         return dica
 
     # aggregate recording all the somatic voltages for pyr
