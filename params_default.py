@@ -1,4 +1,4 @@
-from collections import OrderedDict
+ from collections import OrderedDict
 
 # params_default.py - master list of changeable params. most set to default val of inactive
 #
@@ -143,7 +143,6 @@ def get_params_default (nprox = 2, ndist = 1):
         'save_cai': 0, # EDITED BY SARAH whether to record/save somatic calcium concentration
         'save_ica': 0,
 
-
         # IClamp params for L2Pyr
         'Itonic_A_L2Pyr_soma': 0.,
         'Itonic_t0_L2Pyr_soma': 0.,
@@ -210,7 +209,7 @@ def get_ev_params_default (n,isprox):
   if isprox: lty.append('L5Basket')
   lsy = ['ampa', 'nmda'] # allow changing both ampa and nmda weights
   for i in range(n):
-    tystr = pref + '_' + str(i+1) # this string includes input number 
+    tystr = pref + '_' + str(i+1) # this string includes input number
     for ty in lty:
       for sy in lsy:
         dout['gbar_' + tystr + '_' + ty + '_' + sy] = 0. # feed strength
