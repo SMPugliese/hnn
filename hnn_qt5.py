@@ -70,7 +70,7 @@ else: plt.rcParams['font.size'] = dconf['fontsize'] = 10
 if debug: print('getPyComm:',getPyComm())
 
 # for signaling
-class Communicate (QObject):    
+class Communicate (QObject):
   finishSim = pyqtSignal()
 
 # for signaling - passing text
@@ -100,7 +100,7 @@ def bringwintotop (win):
   #win.setWindowState((win.windowState() & ~Qt.WindowMinimized) | Qt.WindowActive)
   #win.activateWindow()
   #win.raise_()
-  #win.show() 
+  #win.show()
 
 # based on https://nikolak.com/pyqt-threading-tutorial/
 class RunSimThread (QThread):
@@ -176,10 +176,10 @@ class RunSimThread (QThread):
     if debug: print("cmd:",cmd,"cmdargs:",cmdargs)
     if prtime:
       self.proc = Popen(cmdargs,cwd=os.getcwd())
-    else: 
+    else:
       #self.proc = Popen(cmdargs,stdout=PIPE,stderr=PIPE,cwd=os.getcwd()) # may want to read/display stderr too
       self.proc = Popen(cmdargs,stdout=PIPE,cwd=os.getcwd(),universal_newlines=True)
-    #cstart = time(); 
+    #cstart = time();
     while not self.killed and self.proc.poll() is None: # job is not done
       for stdout_line in iter(self.proc.stdout.readline, ""):
         try: # see https://stackoverflow.com/questions/2104779/qobject-qplaintextedit-multithreading-issues
@@ -194,7 +194,7 @@ class RunSimThread (QThread):
       sleep(1)
       # cend = time(); rtime = cend - cstart
     if debug: print('sim finished')
-    if not self.killed:  
+    if not self.killed:
       if debug: print('not self.killed')
       try: # lack of output file may occur if invalid param values lead to an nrniv crash
 
@@ -216,7 +216,7 @@ class RunSimThread (QThread):
       if debug: print('self.killproc')
       self.killproc()
     print(''); self.updatewaitsimwin('')
-  
+
   def optmodel (self):
     self.updatewaitsimwin('Optimizing model. . .')
     from neuron import h # for praxis
@@ -228,7 +228,7 @@ class RunSimThread (QThread):
     def optrun (vparam):
       # create parameter dictionary of current values to test
       lparam = list(dconf['params'].values())
-      dtest = OrderedDict() # parameter values to test      
+      dtest = OrderedDict() # parameter values to test
       for prm,val in zip(lparam,expvals(vparam,lparam)): # set parameters
         if val >= prm.minval and val <= prm.maxval:
           if debug: print('optrun prm:',prm.var,prm.minval,prm.maxval,val)
@@ -267,7 +267,7 @@ class RunSimThread (QThread):
 
     tol = 1e-5; nstep = 100; stepsz = 0.5 # 1.0 #stepsz = 0.5
     h.attr_praxis(tol, stepsz, 3)
-    h.stop_praxis(nstep) # 
+    h.stop_praxis(nstep) #
     lparam = list(dconf['params'].values())
     lvar = [p.var for p in lparam]
     if debug: print('lparam=',lparam)
@@ -294,7 +294,7 @@ def lookupresource (fn):
 
 # DictDialog - dictionary-based dialog with tabs - should make all dialogs
 # specifiable via cfg file format - then can customize gui without changing py code
-# and can reduce code explosion / overlap between dialogs 
+# and can reduce code explosion / overlap between dialogs
 class DictDialog (QDialog):
 
   def __init__ (self, parent, din):
@@ -362,7 +362,7 @@ class DictDialog (QDialog):
 
     for i in range(len(self.ldict)): self.ltabs.append(QWidget())
 
-    self.tabs.resize(575,200) 
+    self.tabs.resize(575,200)
 
     # create tabs and their layouts
     for tab,s in zip(self.ltabs,self.ltitle):
@@ -377,10 +377,10 @@ class DictDialog (QDialog):
         self.dqline[k].setText(str(v))
         tab.layout.addRow(self.transvar(k),self.dqline[k]) # adds label,QLineEdit to the tab
 
-    # Add tabs to widget        
+    # Add tabs to widget
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
-    self.setWindowTitle(self.stitle)  
+    self.setWindowTitle(self.stitle)
     nw, nh = setscalegeom(self, 150, 150, 625, 300)
     #nx = parent.rect().x()+parent.rect().width()/2-nw/2
     #ny = parent.rect().y()+parent.rect().height()/2-nh/2
@@ -394,7 +394,7 @@ class DictDialog (QDialog):
 
   def addOffButton (self):
     # Create a horizontal box layout to hold the button
-    self.button_box = QHBoxLayout() 
+    self.button_box = QHBoxLayout()
     self.btnoff = QPushButton('Turn Off Inputs',self)
     self.btnoff.resize(self.btnoff.sizeHint())
     self.btnoff.clicked.connect(self.TurnOff)
@@ -403,7 +403,7 @@ class DictDialog (QDialog):
     self.layout.addLayout(self.button_box)
 
   def addHideButton (self):
-    self.bbhidebox = QHBoxLayout() 
+    self.bbhidebox = QHBoxLayout()
     self.btnhide = QPushButton('Hide Window',self)
     self.btnhide.resize(self.btnhide.sizeHint())
     self.btnhide.clicked.connect(self.hide)
@@ -432,7 +432,7 @@ class OngoingInputParamDialog (DictDialog):
   def addImages (self):
     if self.isprox: self.pix = QPixmap(lookupresource('proxfig'))
     else: self.pix = QPixmap(lookupresource('distfig'))
-    for tab in self.ltabs:      
+    for tab in self.ltabs:
       pixlbl = ClickLabel(self)
       pixlbl.setPixmap(self.pix)
       tab.layout.addRow(pixlbl)
@@ -514,7 +514,7 @@ class EvokedOrRhythmicDialog (QDialog):
     self.addHideButton()
 
     setscalegeom(self, 150, 150, 270, 120)
-    self.setWindowTitle("Pick Input Type")     
+    self.setWindowTitle("Pick Input Type")
 
   def showevokedwin (self):
     bringwintotop(self.evwin)
@@ -525,7 +525,7 @@ class EvokedOrRhythmicDialog (QDialog):
     self.hide()
 
   def addHideButton (self):
-    self.bbhidebox = QHBoxLayout() 
+    self.bbhidebox = QHBoxLayout()
     self.btnhide = QPushButton('Hide Window',self)
     self.btnhide.resize(self.btnhide.sizeHint())
     self.btnhide.clicked.connect(self.hide)
@@ -600,11 +600,11 @@ class SynGainParamDialog (QDialog):
     self.btncancel = QPushButton('Cancel',self)
     self.btncancel.resize(self.btncancel.sizeHint())
     self.btncancel.clicked.connect(self.hide)
-    grid.addWidget(self.btncancel, row, 1, 1, 1); 
+    grid.addWidget(self.btncancel, row, 1, 1, 1);
 
-    self.setLayout(grid)  
+    self.setLayout(grid)
     setscalegeom(self, 150, 150, 270, 180)
-    self.setWindowTitle("Synaptic Gains")  
+    self.setWindowTitle("Synaptic Gains")
 
 # widget to specify tonic inputs
 class TonicInputParamDialog (DictDialog):
@@ -731,7 +731,7 @@ class EvokedInputParamDialog (QDialog):
         elif self.ndist < ndist:
           self.addDist()
       else:
-        if self.ndist < ndist:          
+        if self.ndist < ndist:
           self.addDist()
         elif self.nprox < nprox:
           self.addProx()
@@ -745,7 +745,7 @@ class EvokedInputParamDialog (QDialog):
         self.incedit.setText(str(v).strip())
       elif k in self.dqline:
         self.dqline[k].setText(str(v).strip())
-      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0): 
+      elif k.count('gbar') > 0 and (k.count('evprox')>0 or k.count('evdist')>0):
         # for back-compat with old-style specification which didn't have ampa,nmda in evoked gbar
         lks = k.split('_')
         eloc = lks[1]
@@ -753,12 +753,12 @@ class EvokedInputParamDialog (QDialog):
         if eloc == 'evprox':
           for ct in ['L2Pyr','L2Basket','L5Pyr','L5Basket']:
             # ORIGINAL MODEL/PARAM: only ampa for prox evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
         elif eloc == 'evdist':
           for ct in ['L2Pyr','L2Basket','L5Pyr']:
             # ORIGINAL MODEL/PARAM: both ampa and nmda for distal evoked inputs
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip()) 
-            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip()) 
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_ampa'].setText(str(v).strip())
+            self.dqline['gbar_'+eloc+'_'+enum+'_'+ct+'_nmda'].setText(str(v).strip())
 
   def initUI (self):
     self.layout = QVBoxLayout(self)
@@ -767,10 +767,10 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addStretch(1)
 
     self.ltabs = []
-    self.tabs = QTabWidget(); 
+    self.tabs = QTabWidget();
     self.layout.addWidget(self.tabs)
-    
-    self.button_box = QVBoxLayout() 
+
+    self.button_box = QVBoxLayout()
     self.btnprox = QPushButton('Add Proximal Input',self)
     self.btnprox.resize(self.btnprox.sizeHint())
     self.btnprox.clicked.connect(self.addProx)
@@ -801,9 +801,9 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addLayout(self.button_box)
     self.layout.addLayout(self.incbox)
 
-    self.tabs.resize(425,200) 
+    self.tabs.resize(425,200)
 
-    # Add tabs to widget        
+    # Add tabs to widget
     self.layout.addWidget(self.tabs)
     self.setLayout(self.layout)
 
@@ -888,7 +888,7 @@ class EvokedInputParamDialog (QDialog):
 
     # print('isprox,isdist,inputid',isprox,isdist,inputID)
 
-    for k in d.keys(): 
+    for k in d.keys():
       if k in self.dqline:
         del self.dqline[k]
     self.ld.remove(d)
@@ -922,7 +922,7 @@ class EvokedInputParamDialog (QDialog):
     return s
 
   def addRemoveInputButton (self):
-    self.bbremovebox = QHBoxLayout() 
+    self.bbremovebox = QHBoxLayout()
     self.btnremove = QPushButton('Remove Input',self)
     self.btnremove.resize(self.btnremove.sizeHint())
     self.btnremove.clicked.connect(self.removeCurrentInput)
@@ -931,7 +931,7 @@ class EvokedInputParamDialog (QDialog):
     self.layout.addLayout(self.bbremovebox)
 
   def addHideButton (self):
-    self.bbhidebox = QHBoxLayout() 
+    self.bbhidebox = QHBoxLayout()
     self.btnhide = QPushButton('Hide Window',self)
     self.btnhide.resize(self.btnhide.sizeHint())
     self.btnhide.clicked.connect(self.hide)
@@ -983,8 +983,8 @@ class EvokedInputParamDialog (QDialog):
                          ('gbar_evprox_' + str(self.nprox) + '_L2Pyr_nmda', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Basket_ampa', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L2Basket_nmda', 0.),
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),                                   
-                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),                                   
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_ampa', 0.),
+                         ('gbar_evprox_' + str(self.nprox) + '_L5Pyr_nmda', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket_ampa', 0.),
                          ('gbar_evprox_' + str(self.nprox) + '_L5Basket_nmda', 0.)])
     self.ld.append(dprox)
@@ -1016,7 +1016,7 @@ class EvokedInputParamDialog (QDialog):
     self.tabs.setCurrentIndex(len(self.ltabs)-1)
     #print('index now', self.tabs.currentIndex(), ' of ', self.tabs.count())
     self.addtips()
-    
+
 # widget to specify run params (tstop, dt, etc.) -- not many params here
 class RunParamDialog (DictDialog):
   def __init__ (self, parent, din = None):
@@ -1032,7 +1032,7 @@ class RunParamDialog (DictDialog):
                              ('threshold',0.0)]) # firing threshold
                              # cvode - not currently used by simulation
 
-    # analysis    
+    # analysis
     self.danalysis = OrderedDict([('save_figs',0),
                                   ('save_spec_data', 0),
                                   ('f_max_spec', 40),
@@ -1082,7 +1082,7 @@ class RunParamDialog (DictDialog):
     self.dqextra['NumCores'] = QLineEdit(self)
     self.dqextra['NumCores'].setText(str(defncore))
     self.addtransvar('NumCores','Number Cores')
-    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores']) 
+    self.ltabs[0].layout.addRow('NumCores',self.dqextra['NumCores'])
 
   def getntrial (self): return int(self.dqline['N_trials'].text().strip())
 
@@ -1095,7 +1095,7 @@ class CellParamDialog (DictDialog):
     self.addHideButton()
 
   def initd (self):
-    
+
     self.dL2PyrGeom = OrderedDict([('L2Pyr_soma_L', 22.1), # Soma
                                    ('L2Pyr_soma_diam', 23.4),
                                    ('L2Pyr_soma_cm', 0.6195),
@@ -1243,7 +1243,7 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
           if lk[3] == 'hh2': nv += '(S/cm2)'
           else: nv += '(pS/micron2)'
-        elif lk[2].count('el') > 0: 
+        elif lk[2].count('el') > 0:
           nv = dtrans[lk[1]] + ' leak reversal (mV)'
         elif lk[2].count('taur') > 0:
           nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' (ms)'
@@ -1320,7 +1320,7 @@ class HelpDialog (QDialog):
     self.layout.addStretch(1)
 
     setscalegeom(self, 100, 100, 300, 100)
-    self.setWindowTitle('Help')    
+    self.setWindowTitle('Help')
 
 # dialog for visualizing model
 class VisnetDialog (QDialog):
@@ -1363,7 +1363,7 @@ class VisnetDialog (QDialog):
 
     # Create a horizontal box layout to hold the buttons
     self.button_box = QHBoxLayout()
- 
+
     self.btnok = QPushButton('Visualize',self)
     self.btnok.resize(self.btnok.sizeHint())
     self.btnok.clicked.connect(self.runvisnet)
@@ -1375,7 +1375,7 @@ class VisnetDialog (QDialog):
     self.button_box.addWidget(self.btncancel)
 
     self.layout.addLayout(self.button_box)
-        
+
     setscalegeom(self, 100, 100, 300, 100)
 
     self.setWindowTitle('Visualize Model')
@@ -1423,7 +1423,7 @@ class SchematicDialog (QDialog):
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setScaledContents(True)
     #self.pixConnlbl.resize(self.pixConnlbl.size())
-    self.pixConnlbl.setPixmap(self.pixConn)    
+    self.pixConnlbl.setPixmap(self.pixConn)
     # self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
@@ -1458,7 +1458,7 @@ class BaseParamDialog (QDialog):
     self.initUI()
     self.runparamwin = RunParamDialog(self)
     self.cellparamwin = CellParamDialog(self)
-    self.netparamwin = NetworkParamDialog(self)    
+    self.netparamwin = NetworkParamDialog(self)
     self.syngainparamwin = SynGainParamDialog(self,self.netparamwin)
     self.proxparamwin = OngoingInputParamDialog(self,'Proximal')
     self.distparamwin = OngoingInputParamDialog(self,'Distal')
@@ -1473,9 +1473,9 @@ class BaseParamDialog (QDialog):
     try:
       din = quickreadprm(paramf)
       if usingEvokedInputs(din): # default for evoked is to show average dipole
-        conf.dconf['drawavgdpl'] = True        
+        conf.dconf['drawavgdpl'] = True
       elif usingOngoingInputs(din): # default for ongoing is NOT to show average dipole
-        conf.dconf['drawavgdpl'] = False        
+        conf.dconf['drawavgdpl'] = False
     except:
       print('could not read',paramf)
     ddef = params_default.get_params_default()
@@ -1517,7 +1517,7 @@ class BaseParamDialog (QDialog):
     self.btnrun.resize(self.btnrun.sizeHint())
     self.btnrun.setToolTip('Set Run Parameters')
     self.btnrun.clicked.connect(self.setrunparam)
-    grid.addWidget(self.btnrun, row, 0, 1, 1); 
+    grid.addWidget(self.btnrun, row, 0, 1, 1);
 
     self.btncell = QPushButton('Cell',self)
     self.btncell.resize(self.btncell.sizeHint())
@@ -1529,13 +1529,13 @@ class BaseParamDialog (QDialog):
     self.btnnet.resize(self.btnnet.sizeHint())
     self.btnnet.setToolTip('Set Local Network Parameters')
     self.btnnet.clicked.connect(self.setnetparam)
-    grid.addWidget(self.btnnet, row, 0, 1, 1); 
+    grid.addWidget(self.btnnet, row, 0, 1, 1);
 
     self.btnsyngain = QPushButton('Synaptic Gains',self)
     self.btnsyngain.resize(self.btnsyngain.sizeHint())
     self.btnsyngain.setToolTip('Set Local Network Synaptic Gains')
     self.btnsyngain.clicked.connect(self.setsyngainparam)
-    grid.addWidget(self.btnsyngain, row, 1, 1, 1); 
+    grid.addWidget(self.btnsyngain, row, 1, 1, 1);
 
     row+=1
 
@@ -1581,11 +1581,11 @@ class BaseParamDialog (QDialog):
     self.btnhide.setToolTip('Hide Window')
     grid.addWidget(self.btnhide, row, 0, 1, 2)
 
-    self.setLayout(grid) 
-        
+    self.setLayout(grid)
+
     setscalegeom(self, 100, 100, 400, 100)
 
-    self.setWindowTitle('Set Parameters')    
+    self.setWindowTitle('Set Parameters')
 
   def saveparams (self, checkok = True):
     global paramf,basedir
@@ -1598,7 +1598,7 @@ class BaseParamDialog (QDialog):
       msg.setIcon(QMessageBox.Warning)
       msg.setText(tmpf + ' already exists. Over-write?')
       msg.setWindowTitle('Over-write file(s)?')
-      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)      
+      msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
       if msg.exec_() == QMessageBox.Ok: oktosave = True
     if oktosave:
       if debug: print('Saving params to ',  tmpf)
@@ -1686,7 +1686,7 @@ class HNNGUI (QMainWindow):
   def __init__ (self):
     # initialize the main HNN GUI
     global dfile, ddat, paramf
-    super().__init__()   
+    super().__init__()
     self.runningsim = False
     self.runthread = None
     self.fontsize = dconf['fontsize']
@@ -1728,7 +1728,7 @@ class HNNGUI (QMainWindow):
     if ok:
       self.markersize = plt.rcParams['lines.markersize'] = i
       self.redraw()
-    
+
   def selParamFileDialog (self):
     # bring up window to select simulation parameter file
     global paramf,dfile
@@ -1741,7 +1741,7 @@ class HNNGUI (QMainWindow):
         pass
       # now update the GUI components to reflect the param file selected
       self.baseparamwin.updateDispParam()
-      self.initSimCanvas() # recreate canvas 
+      self.initSimCanvas() # recreate canvas
       # self.m.plot() # replot data
       self.setWindowTitle(paramf)
       # store the sim just loaded in simdat's list - is this the desired behavior? or should we first erase prev sims?
@@ -1804,7 +1804,7 @@ class HNNGUI (QMainWindow):
     # show the help dialog box
     bringwintotop(self.helpwin)
 
-  def showSomaVPlot (self): 
+  def showSomaVPlot (self):
     # start the somatic voltage visualization process (separate window)
     global basedir, dfile
     if not float(self.baseparamwin.runparamwin.getval('save_vsoma')):
@@ -1813,7 +1813,7 @@ class HNNGUI (QMainWindow):
       msg.setIcon(QMessageBox.Information)
       msg.setText(smsg)
       msg.setWindowTitle('Rerun simulation')
-      msg.setStandardButtons(QMessageBox.Ok)      
+      msg.setStandardButtons(QMessageBox.Ok)
       msg.exec_()
     else:
       basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
@@ -1860,7 +1860,7 @@ class HNNGUI (QMainWindow):
     basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
     lcmd = [getPyComm(), 'visdipole.py',paramf,os.path.join(basedir,'dpl.txt')]
     if debug: print('visdipole cmd:',lcmd)
-    Popen(lcmd) # nonblocking    
+    Popen(lcmd) # nonblocking
 
   def showwaitsimwin (self):
     # show the wait sim window (has simulation log)
@@ -1888,12 +1888,12 @@ class HNNGUI (QMainWindow):
     if self.schemwin.isVisible(): lwin.insert(0,self.schemwin)
     if self.baseparamwin.syngainparamwin.isVisible(): lwin.append(self.baseparamwin.syngainparamwin)
     curx,cury,maxh=0,0,0
-    for win in lwin: 
+    for win in lwin:
       widget = win.geometry()
       win.move(curx, cury)
       curx += win.width()
       maxh = max(maxh,win.height())
-      if curx >= sw: 
+      if curx >= sw:
         curx = 0
         cury += maxh
         maxh = win.height()
@@ -1907,7 +1907,7 @@ class HNNGUI (QMainWindow):
       pass
     # now update the GUI components to reflect the param file selected
     self.baseparamwin.updateDispParam()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.setWindowTitle(fn)
 
   def removeSim (self):
@@ -1916,7 +1916,7 @@ class HNNGUI (QMainWindow):
     import simdat
     if debug: print('removeSim',paramf,simdat.lsimidx)
     if len(simdat.lsimdat) > 0 and simdat.lsimidx >= 0:
-      cidx = self.cbsim.currentIndex() # 
+      cidx = self.cbsim.currentIndex() #
       a = simdat.lsimdat[:cidx]
       b = simdat.lsimdat[cidx+1:]
       c = [x for x in a]
@@ -1933,7 +1933,7 @@ class HNNGUI (QMainWindow):
         self.clearSimulations()
 
   def prevSim (self):
-    # go to previous simulation 
+    # go to previous simulation
     global paramf,dfile
     import simdat
     if debug: print('prevSim',paramf,simdat.lsimidx)
@@ -1969,7 +1969,7 @@ class HNNGUI (QMainWindow):
   def clearSimulations (self):
     # clear all simulation data and erase simulations from canvas (does not clear external data)
     self.clearSimulationData()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
@@ -1979,13 +1979,13 @@ class HNNGUI (QMainWindow):
     self.clearSimulationData()
     self.m.clearlextdatobj() # clear the external data
     self.dextdata = simdat.ddat['dextdata'] = OrderedDict()
-    self.initSimCanvas() # recreate canvas 
+    self.initSimCanvas() # recreate canvas
     self.m.draw()
     self.setWindowTitle('')
 
   def initMenu (self):
     # initialize the GUI's menu
-    exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)        
+    exitAction = QAction(QIcon.fromTheme('exit'), 'Exit', self)
     exitAction.setShortcut('Ctrl+Q')
     exitAction.setStatusTip('Exit HNN application')
     exitAction.triggered.connect(qApp.quit)
@@ -2058,7 +2058,7 @@ class HNNGUI (QMainWindow):
     changeMarkerSizeAction = QAction('Change Marker Size',self)
     changeMarkerSizeAction.setStatusTip('Change Marker Size.')
     changeMarkerSizeAction.triggered.connect(self.changeMarkerSize)
-    editMenu.addAction(changeMarkerSizeAction)    
+    editMenu.addAction(changeMarkerSizeAction)
     editMenu.addSeparator()
     editMenu.addAction(clearSims)
     clearDataFileAct2 = QAction(QIcon.fromTheme('close'), 'Clear data file(s)', self) # need new act to avoid DBus warning
@@ -2066,7 +2066,7 @@ class HNNGUI (QMainWindow):
     clearDataFileAct2.triggered.connect(self.clearDataFile)
     editMenu.addAction(clearDataFileAct2)
     editMenu.addAction(clearCanv)
-    
+
     # view menu - to view drawing/visualizations
     viewMenu = menubar.addMenu('&View')
     viewDipoleAction = QAction('View Simulation Dipoles',self)
@@ -2111,7 +2111,7 @@ class HNNGUI (QMainWindow):
     viewSimLogAction.setStatusTip('View Detailed Simulation Log')
     viewSimLogAction.triggered.connect(self.showwaitsimwin)
     viewMenu.addAction(viewSimLogAction)
-    viewMenu.addSeparator()    
+    viewMenu.addSeparator()
     distributeWindowsAction = QAction('Distribute Windows',self)
     distributeWindowsAction.setStatusTip('Distribute Parameter Windows Across Screen.')
     distributeWindowsAction.triggered.connect(self.distribsubwin)
@@ -2127,7 +2127,7 @@ class HNNGUI (QMainWindow):
     setParmAct.setStatusTip('Set Simulation Parameters')
     setParmAct.triggered.connect(self.setparams)
     simMenu.addAction(setParmAct)
-    simMenu.addAction(runSimAct)    
+    simMenu.addAction(runSimAct)
     if dconf['nsgrun']: simMenu.addAction(runSimNSGAct)
     if dconf['optrun']: simMenu.addAction(optSimAct)
     prevSimAct = QAction('Go to Previous Simulation',self)
@@ -2178,7 +2178,7 @@ class HNNGUI (QMainWindow):
     qbtn.clicked.connect(QCoreApplication.instance().quit)
     qbtn.resize(qbtn.sizeHint())
     self.grid.addWidget(self.qbtn, gRow, 3, 1, 1)
-    
+
   def shownetparamwin (self): bringwintotop(self.baseparamwin.netparamwin)
   def showdistparamwin (self): bringwintotop(self.erselectdistal)
   def showproxparamwin (self): bringwintotop(self.erselectprox)
@@ -2217,7 +2217,7 @@ class HNNGUI (QMainWindow):
     self.pixConnlbl = ClickLabel(self)
     self.pixConnlbl.setScaledContents(True)
     #self.pixConnlbl.resize(self.pixConnlbl.size())
-    self.pixConnlbl.setPixmap(self.pixConn)    
+    self.pixConnlbl.setPixmap(self.pixConn)
     # self.pixConnlbl.clicked.connect(self.shownetparamwin)
     self.grid.addWidget(self.pixConnlbl,gRow,0,1,1)
 
@@ -2249,10 +2249,10 @@ class HNNGUI (QMainWindow):
     self.initMenu()
     self.statusBar()
 
-    setscalegeomcenter(self, 1500, 1300) # start GUI in center of screenm, scale based on screen w x h 
+    setscalegeomcenter(self, 1500, 1300) # start GUI in center of screenm, scale based on screen w x h
 
     self.setWindowTitle(paramf)
-    QToolTip.setFont(QFont('SansSerif', 10))        
+    QToolTip.setFont(QFont('SansSerif', 10))
 
     self.grid = grid = QGridLayout()
     #grid.setSpacing(10)
@@ -2341,8 +2341,8 @@ class HNNGUI (QMainWindow):
     self.toolbar = NavigationToolbar(self.m, self)
     gCol = 0
     gWidth = 4
-    self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth); 
-    self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth); 
+    self.grid.addWidget(self.toolbar, gRow, gCol, 1, gWidth);
+    self.grid.addWidget(self.m, gRow + 1, gCol, 1, gWidth);
     if len(self.dextdata.keys()) > 0:
       import simdat
       simdat.ddat['dextdata'] = self.dextdata
@@ -2406,7 +2406,7 @@ class HNNGUI (QMainWindow):
     self.runningsim = True
 
     self.statusBar().showMessage("Optimizing model. . .")
-    self.btnsim.setText("Stop Optimization") 
+    self.btnsim.setText("Stop Optimization")
     self.qbtn.setEnabled(False)
 
     self.runthread = RunSimThread(self.c, ntrial, ncore, self.waitsimwin, opt=True, baseparamwin=self.baseparamwin, mainwin=self, onNSG=False)
@@ -2415,7 +2415,7 @@ class HNNGUI (QMainWindow):
     self.runthread.start()
     # At this point we want to allow user to stop/terminate the thread
     # so we enable that button
-    self.btnsim.setText("Stop Optimization") 
+    self.btnsim.setText("Stop Optimization")
     self.qbtn.setEnabled(False)
     bringwintotop(self.waitsimwin)
 
@@ -2464,7 +2464,7 @@ class HNNGUI (QMainWindow):
     self.setWindowTitle(paramf)
     self.populateSimCB() # populate the combobox
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
   app = QApplication(sys.argv)
   ex = HNNGUI()
-  sys.exit(app.exec_())  
+  sys.exit(app.exec_())
