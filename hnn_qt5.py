@@ -1821,6 +1821,40 @@ class HNNGUI (QMainWindow):
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
 
+  def showCaiPlot (self):
+    # start the somatic voltage visualization process (separate window)
+    global basedir, dfile
+    if not float(self.baseparamwin.runparamwin.getval('save_cai')):
+      smsg='In order to view calcium concentration you must first rerun the simulation saving calcium concentration. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Calcium Concentration, enter a 1 and then rerun the simulation.'
+      msg = QMessageBox()
+      msg.setIcon(QMessageBox.Information)
+      msg.setText(smsg)
+      msg.setWindowTitle('Rerun simulation')
+      msg.setStandardButtons(QMessageBox.Ok)
+      msg.exec_()
+    else:
+      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+      lcmd = [getPyComm(), 'viscai.py',paramf]
+      if debug: print('viscai cmd:',lcmd)
+      Popen(lcmd) # nonblocking
+
+  def showIcaPlot (self):
+    # start the somatic voltage visualization process (separate window)
+    global basedir, dfile
+    if not float(self.baseparamwin.runparamwin.getval('save_ica')):
+      smsg='In order to view calcium concentration you must first rerun the simulation saving calcium current. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save Calcium Current, enter a 1 and then rerun the simulation.'
+      msg = QMessageBox()
+      msg.setIcon(QMessageBox.Information)
+      msg.setText(smsg)
+      msg.setWindowTitle('Rerun simulation')
+      msg.setStandardButtons(QMessageBox.Ok)
+      msg.exec_()
+    else:
+      basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+      lcmd = [getPyComm(), 'visica.py',paramf]
+      if debug: print('visica cmd:',lcmd)
+      Popen(lcmd) # nonblocking
+
   def showPSDPlot (self):
     # start the PSD visualization process (separate window)
     global basedir
@@ -2086,6 +2120,16 @@ class HNNGUI (QMainWindow):
     viewSomaVAction.setStatusTip('View Somatic Voltage')
     viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
+
+    viewCaiAction = QAction('View Calcium Concentration',self)
+    viewCaiAction.setStatusTip('View Calcium Concentration')
+    viewCaiAction.triggered.connect(self.showCaiPlot)
+    viewMenu.addAction(viewCaiAction)
+
+    viewIcaAction = QAction('View Calcium Current',self)
+    viewIcaAction.setStatusTip('View Calcium Current')
+    viewIcaAction.triggered.connect(self.showIcaPlot)
+    viewMenu.addAction(viewIcaAction)
 
     if testLFP:
       viewLFPAction = QAction('View Simulation LFPs',self)
