@@ -34,7 +34,7 @@ dclr = {1 : 'g',    # apical tuft
 
 ntrial = 1; tstop = -1; outparamf = icapath = paramf = '';
 
-maxperty = 10 # how many cells of a type to draw
+maxCount = 4 # how many cells to draw
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.param'):
@@ -43,7 +43,7 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
   elif sys.argv[i] == 'maxperty':
-    maxperty = int(sys.argv[i])
+    maxCount = int(sys.argv[i])
 
 if ntrial <= 1:
   icapath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'ica.pkl')
@@ -68,14 +68,21 @@ class IcaCanvas (FigureCanvas):
     row = 0
     ax = fig.add_subplot(G[row:-1,:])
     lax = [ax]
-    # dcnt = {} # counts number of times cell of a type drawn
+    count = 0
     ica_time = dica['ica_time']
     yoff = 0
 
-    for i in range(1,6):
-        ica = dica[3][i]
-        ax.plot(ica_time, -ica + yoff, dclr[i], linewidth = self.gui.linewidth)
-        yoff += max(ica) - min(ica)
+    for gid,it in dica.items():
+        ty = it[0]
+        if type(gid) != int: continue
+        if ty == "L5_pyramidal":
+            count += 1
+            if count > maxCount: continue
+            for i in range(1,6):
+                ica = it[i]
+                ax.plot(ica_time, -ica + yoff, dclr[i], linewidth = self.gui.linewidth)
+                yoff += max(ica) - min(ica)
+            yoff += .3 # change later?
 
     green_patch = mpatches.Patch(color='green', label='Apical tuft')
     red_patch = mpatches.Patch(color='red', label='Apical 2')
