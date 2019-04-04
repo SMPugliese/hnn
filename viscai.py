@@ -34,7 +34,7 @@ dclr = {1 : 'g',    # apical tuft
 
 ntrial = 1; tstop = -1; outparamf = caipath = paramf = '';
 
-maxperty = 10 # how many cells of a type to draw
+maxCount = 4 # how many cells to draw
 
 for i in range(len(sys.argv)):
   if sys.argv[i].endswith('.param'):
@@ -43,7 +43,7 @@ for i in range(len(sys.argv)):
     ntrial = paramrw.quickgetprm(paramf,'N_trials',int)
     outparamf = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'param.txt')
   elif sys.argv[i] == 'maxperty':
-    maxperty = int(sys.argv[i])
+    maxCount = int(sys.argv[i])
 
 if ntrial <= 1:
   caipath = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'cai.pkl')
@@ -68,14 +68,21 @@ class CaiCanvas (FigureCanvas):
     row = 0
     ax = fig.add_subplot(G[row:-1,:])
     lax = [ax]
-    # dcnt = {} # counts number of times cell of a type drawn
+    count = 0
     cai_time = dcai['cai_time']
     yoff = 0
 
-    for i in range(1,6):
-        cai = dcai[3][i]
-        ax.plot(cai_time, -cai + yoff, dclr[i], linewidth = self.gui.linewidth)
-        yoff += max(cai) - min(cai)
+    for gid,it in dcai.items():
+        ty = it[0]
+        if type(gid) != int: continue
+        if ty == "L5_pyramidal":
+            count += 1
+            if count > maxCount: continue
+            for i in range(1,6):
+                cai = it[i]
+                ax.plot(cai_time, -cai + yoff, dclr[i], linewidth = self.gui.linewidth)
+                yoff += max(cai) - min(cai)
+            yoff += .3 # change later?
 
     green_patch = mpatches.Patch(color='green', label='Apical tuft')
     red_patch = mpatches.Patch(color='red', label='Apical 2')
@@ -101,7 +108,10 @@ class CaiCanvas (FigureCanvas):
 
   def plot (self):
     if self.index == 0:
-      dcai = pickle.load(open(caipath,'rb'))
+      if ntrial == 1:
+        dcai = pickle.load(open(caipath,'rb'))
+      else:
+        dcai = pickle.load(open(caipath,'rb'))
       self.lax = self.drawcai(dcai,self.figure, self.G, 5, ltextra='All Trials')
     else:
       caipathtrial = os.path.join(dconf['datdir'],paramf.split('.param')[0].split(os.path.sep)[-1],'cai_'+str(self.index)+'.pkl')
