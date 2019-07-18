@@ -8,6 +8,7 @@ import sys
 import numpy as np
 
 from neuron import h
+from neuron import crxd as rxd
 from cell import Pyr
 import paramrw
 import params_default as p_default
@@ -86,6 +87,8 @@ class L5Pyr(Pyr):
         # create synapses
         self.__synapse_create(p_syn)
 
+        # self.create_ca_rxd()
+
         # insert iclamp
         self.list_IClamp = []
 
@@ -96,34 +99,36 @@ class L5Pyr(Pyr):
     # temporarily an external function taking the p dict
     def create_all_IClamp(self, p):
         # list of sections for this celltype
-        sect_list_IClamp = ['soma',]
+        sect_list_IClamp = ['soma','apical_2']
+        self.list_IClamp = []
+        for sect_name in sect_list_IClamp:
+            # some parameters
+            t_delay = p['Itonic_t0_L5Pyr_'+sect_name]
 
-        # some parameters
-        t_delay = p['Itonic_t0_L5Pyr_soma']
+            # T = -1 means use h.tstop
+            if p['Itonic_T_L5Pyr_'+sect_name] == -1:
+                # t_delay = 50.
+                t_dur = h.tstop - t_delay
+            else:
+                t_dur = p['Itonic_T_L5Pyr_'+sect_name] - t_delay
 
-        # T = -1 means use h.tstop
-        if p['Itonic_T_L5Pyr_soma'] == -1:
-            # t_delay = 50.
-            t_dur = h.tstop - t_delay
-        else:
-            t_dur = p['Itonic_T_L5Pyr_soma'] - t_delay
+            # t_dur must be nonnegative, I imagine
+            if t_dur < 0.:
+                t_dur = 0.
 
-        # t_dur must be nonnegative, I imagine
-        if t_dur < 0.:
-            t_dur = 0.
+            # properties of the IClamp
+            props_IClamp = {
+                'loc': 0.5,
+                'delay': t_delay,
+                'dur': t_dur,
+                'amp': p['Itonic_A_L5Pyr_'+sect_name]
+            }
+            # iterate through list of sect_list_IClamp to create a persistent IClamp object
+            # the insert_IClamp procedure is in Cell() and checks on names
+            # so names must be actual section names, or else it will fail silently
+            self.list_IClamp.append(self.insert_IClamp(sect_name, props_IClamp))
 
-        # properties of the IClamp
-        props_IClamp = {
-            'loc': 0.5,
-            'delay': t_delay,
-            'dur': t_dur,
-            'amp': p['Itonic_A_L5Pyr_soma']
-        }
-
-        # iterate through list of sect_list_IClamp to create a persistent IClamp object
-        # the insert_IClamp procedure is in Cell() and checks on names
-        # so names must be actual section names, or else it will fail silently
-        self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
+        # self.list_IClamp = [self.insert_IClamp(sect_name, props_IClamp) for sect_name in sect_list_IClamp]
 
     # Sets somatic properties. Returns dictionary.
     def __get_soma_props(self, pos):
@@ -244,7 +249,7 @@ class L5Pyr(Pyr):
         connect dend(0), soma(1) // dend[0] is apical trunk
         for i = 1, 2 connect dend[i](0), dend(1) // dend[1] is oblique, dend[2] is apic1
         for i = 3, 4 connect dend[i](0), dend[i-1](1) // dend[3],dend[4] are apic2,apic tuft
-        connect dend[5](0), soma(0) //was soma(1)this is correct! 
+        connect dend[5](0), soma(0) //was soma(1)this is correct!
         for i = 6, 7 connect dend[i](0), dend[5](1)
         """
 
@@ -265,20 +270,24 @@ class L5Pyr(Pyr):
 
         self.basic_shape() # translated from original hoc (2009 model)
 
-        # # Distal
-        # self.list_dend[0].connect(self.soma, 1, 0)
-        # self.list_dend[1].connect(self.list_dend[0], 1, 0)
+    def __lin_dist (self, x, gsoma, gdend, gdist):
+        g = gsoma + x * (gdend - gsoma)/gdist
+        if gdend < gsoma and g < gdend: return gdend
+        elif gdend > gsoma and g > gdend: return gdend
+        else: return g
 
-        # self.list_dend[2].connect(self.list_dend[1], 1, 0)
-        # self.list_dend[3].connect(self.list_dend[2], 1, 0)
-
-        # # dend[4] comes off of dend[0](1)
-        # self.list_dend[4].connect(self.list_dend[0], 1, 0)
-
-        # # Proximal
-        # self.list_dend[5].connect(self.soma, 0, 0)
-        # self.list_dend[6].connect(self.list_dend[5], 1, 0)
-        # self.list_dend[7].connect(self.list_dend[5], 1, 0)
+    def __insert_almog (self, seg):
+        # seg.gbar_ar = self.p_all['L5Pyr_soma_gbar_ar'] + self.p_all['L5Pyr_dend_gbar_ar'] /  (1 +
+        # np.exp(-0.014*(abs(h.distance(seg.x)) - 704))) # changed to 1600 from 352
+        seg.gkbar_hh2 = self.p_all['L5Pyr_dend_gkbar_hh2'] + self.p_all['L5Pyr_soma_gkbar_hh2'] * np.exp(-0.006*abs(h.distance(seg.x)))
+        # seg.gnabar_hh2 = self.p_all['L5Pyr_dend_gnabar_hh2'] + self.p_all['L5Pyr_soma_gnabar_hh2'] * np.exp(-0.004*abs(h.distance(seg.x)))
+        seg.gnabar_hh2 = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gnabar_hh2'], self.p_all['L5Pyr_dend_gnabar_hh2'], 962) #962
+        seg.gbar_ca = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gbar_ca'], self.p_all['L5Pyr_dend_gbar_ca'], 1501) # beginning of tuft
+        # ca_peak = self.p_all['L5Pyr_dend_gbar_ca']
+        # seg.gbar_ca = - ca_peak/1161 * abs(h.distance(seg.x) - 1161) + ca_peak
+        # seg.gbar_cat = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gbar_cat'], self.p_all['L5Pyr_dend_gbar_cat'], 1850)
+        # # Try BK:
+        # seg.gbar_kca = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gbar_kca'], self.p_all['L5Pyr_dend_gbar_kca'], 56) # SK: 478
 
     # adds biophysics to soma
     def __biophys_soma(self):
@@ -287,7 +296,7 @@ class L5Pyr(Pyr):
 
         # Insert 'hh2' mechanism
         self.soma.insert('hh2')
-        self.soma.gkbar_hh2 = self.p_all['L5Pyr_soma_gkbar_hh2']
+        self.soma.gkbar_hh2 = self.p_all['L5Pyr_soma_gkbar_hh2'] + self.p_all['L5Pyr_dend_gkbar_hh2']
         self.soma.gnabar_hh2 = self.p_all['L5Pyr_soma_gnabar_hh2']
         self.soma.gl_hh2 = self.p_all['L5Pyr_soma_gl_hh2']
         self.soma.el_hh2 = self.p_all['L5Pyr_soma_el_hh2']
@@ -328,15 +337,15 @@ class L5Pyr(Pyr):
         for key in self.dends:
             # Insert 'hh2' mechanism
             self.dends[key].insert('hh2')
-            self.dends[key].gkbar_hh2 = self.p_all['L5Pyr_dend_gkbar_hh2']
+            # self.dends[key].gkbar_hh2 = self.p_all['L5Pyr_dend_gkbar_hh2']
             self.dends[key].gl_hh2 = self.p_all['L5Pyr_dend_gl_hh2']
-            self.dends[key].gnabar_hh2 = self.p_all['L5Pyr_dend_gnabar_hh2']
+            # self.dends[key].gnabar_hh2 = self.p_all['L5Pyr_dend_gnabar_hh2']
             self.dends[key].el_hh2 = self.p_all['L5Pyr_dend_el_hh2']
 
             # Insert 'ca' mechanims
             # Units: pS/um^2
             self.dends[key].insert('ca')
-            self.dends[key].gbar_ca = self.p_all['L5Pyr_dend_gbar_ca']
+            # self.dends[key].gbar_ca = 0 #self.p_all['L5Pyr_dend_gbar_ca']
 
             # Insert 'cad' mechanism
             self.dends[key].insert('cad')
@@ -358,6 +367,11 @@ class L5Pyr(Pyr):
             # insert 'ar' mechanism
             self.dends[key].insert('ar')
 
+            # if key is 'apical_tuft':
+            #     self.dends[key].gbar_ca = self.p_all['L5Pyr_dend_gbar_ca']
+            #     self.dends[key].taur_cad = self.p_all['L5Pyr_dend_taur_cad']
+            #     self.dends[key].gbar_kca = self.p_all['L5Pyr_dend_gbar_kca']
+
         # set gbar_ar
         # Value depends on distance from the soma. Soma is set as
         # origin by passing self.soma as a sec argument to h.distance()
@@ -366,13 +380,34 @@ class L5Pyr(Pyr):
         # distance from the soma to this point on the CURRENTLY ACCESSED
         # SECTION!!!
         h.distance(sec=self.soma)
+        # mna = (self.p_all['L5Pyr_dend_gnabar_hh2']-self.p_all['L5Pyr_soma_gnabar_hh2'])/h.distance(self.dends['apical_tuft'](1))
+        # mh = (self.p_all['L5Pyr_dend_gbar_ar']-self.p_all['L5Pyr_soma_gbar_ar'])/h.distance(self.dends['apical_tuft'](1))
+        # print(mna,mh)
 
         for key in self.dends:
             self.dends[key].push()
             for seg in self.dends[key]:
-                seg.gbar_ar = 1e-6 * np.exp(3e-3 * h.distance(seg.x))
-
+                seg.gbar_ar = self.p_all['L5Pyr_dend_gbar_ar'] * np.exp(3e-3 * h.distance(seg.x)) # 3e-3
+                self.__insert_almog(seg)
+                # seg.gkbar_hh2 = self.p_all['L5Pyr_dend_gkbar_hh2'] + self.p_all['L5Pyr_soma_gkbar_hh2'] * np.exp(-0.006*abs(h.distance(seg.x)))
+                # seg.gnabar_hh2 = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gnabar_hh2'], self.p_all['L5Pyr_dend_gnabar_hh2'], 962) # 962
+                # if "basal" not in key:
+                #     seg.gbar_ca = self.__lin_dist(abs(h.distance(seg.x)), self.p_all['L5Pyr_soma_gbar_ca'], self.p_all['L5Pyr_dend_gbar_ca'], 1501) # beginning of tuft
             h.pop_section()
+
+    def create_ca_rxd(self):
+        cainf = 100e-6
+        taur = self.p_all['L5Pyr_dend_taur_cad'] # temporary
+        # drive_channel = -(10000) * self.ica_soma / (.2)
+        # [sec for sec in h.allsec() if 'soma' in sec.name()]
+
+        ca_reg = rxd.Region(h.allsec(), nrn_region='i', name='ca_reg', geometry=rxd.Shell(0.9848,1))
+        ca = rxd.Species(ca_reg, d=0.3, name='ca', charge=2, initial=cainf)
+        ca_pump = rxd.Rate(ca, (cainf-ca) / taur)
+
+        self.ca = ca
+        self.ca_reg = ca_reg
+        self.ca_pump = ca_pump
 
     def __synapse_create(self, p_syn):
         # creates synapses onto this cell
@@ -384,7 +419,7 @@ class L5Pyr(Pyr):
 
         # Dendritic synapses
         self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabaa'])
-        #self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabab'])#RL version
+        # self.apicaltuft_gabaa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['gabab'])#RL version
 
         self.apicaltuft_ampa = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['ampa'])
         self.apicaltuft_nmda = self.syn_create(self.dends['apical_tuft'](0.5), p_syn['nmda'])
