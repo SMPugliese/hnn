@@ -1211,13 +1211,13 @@ class CellParamDialog (DictDialog):
       for k in d.keys():
         lk = k.split('_')
         if lk[-1] == 'L':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'length (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'length (µm)')
         elif lk[-1] == 'diam':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'diameter (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'diameter (µm)')
         elif lk[-1] == 'cm':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'capacitive density (F/cm2)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'capacitive density (µF/cm²)')
         elif lk[-1] == 'Ra':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'resistivity (ohm-cm)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'resistivity (Ω-cm)')
 
     for d in [self.dL2PyrSyn, self.dL5PyrSyn]:
       for k in d.keys():
@@ -1237,8 +1237,8 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
-          if lk[3] == 'hh2': nv += '(S/cm2)'
-          else: nv += '(pS/micron2)'
+          if lk[3] in ['hh2','cat','ar']: nv += '(S/cm²)'
+          else: nv += '(pS/μm²)'
         elif lk[2].count('el') > 0: 
           nv = dtrans[lk[1]] + ' leak reversal (mV)'
         elif lk[2].count('taur') > 0:
