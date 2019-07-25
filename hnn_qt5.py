@@ -633,6 +633,10 @@ class TonicInputParamDialog (DictDialog):
       ('Itonic_A_L5Pyr_soma', 0.),
       ('Itonic_t0_L5Pyr_soma', 0.),
       ('Itonic_T_L5Pyr_soma', -1.),
+      # IClamp params for L5Pyr dendrites
+      ('Itonic_A_L5Pyr_apical_2', 0.),
+      ('Itonic_t0_L5Pyr_apical_2', 0.),
+      ('Itonic_T_L5Pyr_apical_2', -1.),
       # IClamp param for L5Basket
       ('Itonic_A_L5Basket', 0.),
       ('Itonic_t0_L5Basket', 0.),
@@ -643,6 +647,11 @@ class TonicInputParamDialog (DictDialog):
       for k in d.keys():
         cty = k.split('_')[2] # cell type
         tcty = dtmp[cty[0:2]] + cty[2:] # translated cell type
+        if len(k.split('_')) > 3:
+            if k.split('_')[3] == 'soma':
+                tcty = tcty + ' soma'
+            else:
+                tcty = tcty + ' dendrite'
         if k.count('A') > 0:
           self.addtransvar(k, tcty + ' amplitude (nA)')
         elif k.count('t0') > 0:
@@ -1039,6 +1048,7 @@ class RunParamDialog (DictDialog):
                                   ('dipole_scalefctr',30e3),
                                   ('dipole_smooth_win',15.0),
                                   ('save_vsoma',0),
+                                  ('save_L5volts',0),
                                   ('save_cai',0),
                                   ('save_ica',0)])
 
@@ -1065,7 +1075,8 @@ class RunParamDialog (DictDialog):
     self.addtransvar('f_max_spec', 'Max spectral frequency (Hz)')
     self.addtransvar('dipole_scalefctr','Dipole Scaling')
     self.addtransvar('dipole_smooth_win','Dipole Smooth Window (ms)')
-    self.addtransvar('save_vsoma','Save Voltages')
+    self.addtransvar('save_vsoma','Save Somatic Voltages')
+    self.addtransvar('save_L5volts','Save L5Pyr Compartment Voltages')
     self.addtransvar('save_cai','Save Calcium Concentration')
     self.addtransvar('save_ica','Save Calcium Current')
     self.addtransvar('prng_seedcore_input_prox','Ongoing Proximal Input')
@@ -1215,13 +1226,13 @@ class CellParamDialog (DictDialog):
       for k in d.keys():
         lk = k.split('_')
         if lk[-1] == 'L':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'length (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'length (μm)')
         elif lk[-1] == 'diam':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'diameter (micron)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'diameter (μm)')
         elif lk[-1] == 'cm':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'capacitive density (F/cm2)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'capacitive density (μF/cm²)')
         elif lk[-1] == 'Ra':
-          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'resistivity (ohm-cm)')
+          self.addtransvar(k,dtrans[lk[1]] + ' ' + r'resistivity (Ω-cm)')
 
     for d in [self.dL2PyrSyn, self.dL5PyrSyn]:
       for k in d.keys():
@@ -1241,8 +1252,9 @@ class CellParamDialog (DictDialog):
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[3]] + ' ' + ' channel density '
           else:
             nv = dtrans[lk[1]] + ' ' + dtrans[lk[2]] + ' ' + ' channel density '
-          if lk[3] == 'hh2': nv += '(S/cm2)'
-          else: nv += '(pS/micron2)'
+          # if lk[3] == 'hh2': nv += '(S/cm2)'
+          if lk[3] in ['hh2','cat','ar']: nv += '(S/cm²)'
+          else: nv += '(pS/μm²)'
         elif lk[2].count('el') > 0:
           nv = dtrans[lk[1]] + ' leak reversal (mV)'
         elif lk[2].count('taur') > 0:
@@ -1821,6 +1833,22 @@ class HNNGUI (QMainWindow):
       if debug: print('visvolt cmd:',lcmd)
       Popen(lcmd) # nonblocking
 
+  def showL5VPlot (self):
+      global basedir, dfile
+      if not float(self.baseparamwin.runparamwin.getval('save_L5volts')):
+        smsg='In order to view L5 compartment voltages you must first rerun the simulation with saving L5 compartment voltages. To do so from the main GUI, click on Set Parameters -> Run -> Analysis -> Save L5Pyr Compartment Voltages, enter a 1 and then rerun the simulation.'
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+        msg.setText(smsg)
+        msg.setWindowTitle('Rerun simulation')
+        msg.setStandardButtons(QMessageBox.Ok)
+        msg.exec_()
+      else:
+        basedir = os.path.join(dconf['datdir'],paramf.split(os.path.sep)[-1].split('.param')[0])
+        lcmd = [getPyComm(), 'visL5volts.py',paramf]
+        if debug: print('visL5volts cmd:',lcmd)
+        Popen(lcmd) # nonblocking
+
   def showCaiPlot (self):
     # start the somatic voltage visualization process (separate window)
     global basedir, dfile
@@ -2120,6 +2148,11 @@ class HNNGUI (QMainWindow):
     viewSomaVAction.setStatusTip('View Somatic Voltage')
     viewSomaVAction.triggered.connect(self.showSomaVPlot)
     viewMenu.addAction(viewSomaVAction)
+
+    viewL5VAction = QAction('View L5Pyr Compartment Voltages',self)
+    viewL5VAction.setStatusTip('View L5Pyr Compartment Voltages')
+    viewL5VAction.triggered.connect(self.showL5VPlot)
+    viewMenu.addAction(viewL5VAction)
 
     viewCaiAction = QAction('View Calcium Concentration',self)
     viewCaiAction.setStatusTip('View Calcium Concentration')
